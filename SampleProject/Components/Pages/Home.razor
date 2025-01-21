@@ -1,0 +1,40 @@
+﻿@page "/"
+@using Microsoft.EntityFrameworkCore
+@using SampleProject.Data
+@inject IDbContextFactory<AppDbContext> AppDbContextFactory
+
+<h1>Item list.</h1>
+
+<InputText @bind-Value="_inputValue"></InputText>
+<button @onclick="AddItemToDb">Add item</button>
+
+@foreach (Item item in _items)
+{
+    <h3>Item ID: @item.Id, Item Content: @item.Content</h3>
+}
+
+@code{
+
+    List<Item> _items = new ();
+    string? _inputValue = String.Empty;
+
+    // Get item list from DbContext on view initialization to render our list of items.
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        var context = AppDbContextFactory.CreateDbContext();
+        _items = context.Items.ToList();
+        context.Dispose();
+    }
+
+    // Add new Item to DbContexts Item list, update our local item list reflect that change, and call StateHasChanged to re-render our view.
+    private void AddItemToDb()
+    {
+        var context = AppDbContextFactory.CreateDbContext();
+        context.Items.Add(new Item { Content = _inputValue });
+        context.SaveChanges();
+        _items = context.Items.ToList();
+        context.Dispose();
+        StateHasChanged();
+    }
+}
